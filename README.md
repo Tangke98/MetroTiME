@@ -9,5 +9,5 @@ MetroSCREEN is a computational tool designed to deduce metabolic states (MetaMod
 # Install MetroSCREEN
 
 # Documentation
-
+For full installation and usage of MetroSCREEN, please refer to the documentation.
 # Usage
