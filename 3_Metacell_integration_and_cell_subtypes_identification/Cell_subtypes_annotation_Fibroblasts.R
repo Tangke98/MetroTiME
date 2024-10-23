@@ -1,3 +1,8 @@
+#' Annotates cell subtypes for the Metacells of fibroblasts.
+#' @param integrated_object_path_fibroblasts Path to the fibroblasts object.
+#' @param output_path Path to the output file.
+#' @author Ke Tang
+#
 suppressPackageStartupMessages({
     library(Seurat)
     library(ggplot2)

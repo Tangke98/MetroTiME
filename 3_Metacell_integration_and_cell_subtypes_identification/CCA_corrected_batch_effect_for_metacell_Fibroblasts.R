@@ -1,3 +1,11 @@
+#' Corrects the batch effects in datasets for fibroblasts.
+#' @param Seurat_TPM_fibroblasts Path to the Metacell TPM file for fibroblasts.
+#' @param Seurat_TPM_metadata_fibroblasts Path to the Metacell metadata file for fibroblasts.
+#' @param TF_Ligand_Metabolic Path to the genes file for integration.
+#' @param integrated_object_path_fibroblasts Path to the output file.
+#' @author Ke Tang
+#
+
 suppressPackageStartupMessages({
     library(Seurat)
     library(ggplot2)

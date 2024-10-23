@@ -1,3 +1,12 @@
+#' Immune function of MetaModule in TCGA.
+#' @param MetaModule Path to metabolic genes in a metabolic reaction.
+#' @param MetaModule_info Path to metabolic reaction information.
+#' @param TPM_path Path to TPM of TCGA data.
+#' @param immune_path Path to immune signatures in TCGA data.
+#' @param output_path Path to the output file.
+#' @author Ke Tang
+#
+#' 
 suppressPackageStartupMessages({
     library(Seurat)
     library(ggplot2)

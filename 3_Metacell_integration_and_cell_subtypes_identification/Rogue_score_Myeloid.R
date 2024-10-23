@@ -1,3 +1,8 @@
+#' Uses ROGUE to evaluate the clustering of myeloid cells based on highly variable genes.
+#' @param integrated_object_path_myeloid Path to the myeloid cells Metacell TPM file.
+#' @param output_path Path to the output file.
+#' @author Ke Tang
+#
 suppressPackageStartupMessages({
     library(Seurat)
     library(ggplot2)

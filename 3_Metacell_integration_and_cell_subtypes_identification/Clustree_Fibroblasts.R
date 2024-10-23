@@ -1,4 +1,8 @@
-
+#' Uses Clustree to evaluate the clustering of fibroblasts based on highly variable genes.
+#' @param integrated_object_path_fibroblasts Path to the fibroblasts Metacell TPM file.
+#' @param output_path Path to the output file.
+#' @author Ke Tang
+# 
 suppressPackageStartupMessages({
     library(Seurat)
     library(ggplot2)

@@ -1,3 +1,9 @@
+#' Annotates cell subtypes for the Metacells of myeloid cells.
+#' @param integrated_object_path_myeloid Path to the myeloid cells object.
+#' @param output_path Path to the output file.
+#' @author Ke Tang
+#
+
 suppressPackageStartupMessages({
     library(Seurat)
     library(ggplot2)

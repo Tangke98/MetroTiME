@@ -1,3 +1,11 @@
+#' Analyzes ICB response of MetaModule and MetaRegulon.
+#' @param ICB_data Path to ICB response patient data.
+#' @param Tide_res Path to TIDE results for ICB response data.
+#' @param MetaModule Path to metabolic genes in a metabolic reaction.
+#' @param MetaModule_info Path to metabolic reaction information.
+#' @param output_path Path to the output file.
+#' @author Ke Tang
+#
 suppressMessages({
     library(harmony)
     library(Seurat)

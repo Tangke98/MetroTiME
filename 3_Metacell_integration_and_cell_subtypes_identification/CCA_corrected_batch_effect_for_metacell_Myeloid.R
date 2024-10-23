@@ -1,3 +1,11 @@
+#' Corrects the batch effect in datasets for myeloid cells.
+#' @param Seurat_TPM_myeloid Path to the Metacell TPM file for myeloid cells.
+#' @param Seurat_TPM_metadata_myeloid Path to the Metacell metadata file for myeloid cells.
+#' @param TF_Ligand_Metabolic Path to the genes file for integration.
+#' @param integrated_object_path_myeloid Path to the output file.
+#' @author Ke Tang
+#
+#
 suppressPackageStartupMessages({
     library(Seurat)
     library(ggplot2)

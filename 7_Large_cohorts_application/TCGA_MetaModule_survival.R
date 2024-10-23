@@ -1,3 +1,11 @@
+#' Clinical survival outcome of MetaModule.
+#' @param MetaModule Path to MetaModule survival outcomes from TCGA data.
+#' @param TPM_path Path to TPM from TCGA data.
+#' @param clin_path Path to clinical data.
+#' @param output_path Path to the output file.
+#' @author Ke Tang
+#
+
 suppressPackageStartupMessages({
     library(Seurat)
     library(ggplot2)

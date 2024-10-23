@@ -1,3 +1,10 @@
+#' Analyzes ICB response based on MetaModule.
+#' @param ICB_data Path to MetaModule and MetaRegulon in myeloid cells object.
+#' @param MetaModule Path to metabolic genes in a metabolic reaction.
+#' @param MetaModule_info Path to metabolic reaction information.
+#' @param output_path Path to the output file.
+#' @author Ke Tang
+#
 suppressPackageStartupMessages({
     library(Seurat)
     library(ggplot2)

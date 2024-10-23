@@ -1,3 +1,14 @@
+#' Analyzes drug response of MetaModule and MetaRegulon.
+#' @param myeloid_path Path to the MetaModule and MetaRegulon in myeloid cells object.
+#' @param fibroblast_path Path to the MetaModule and MetaRegulon in fibroblasts object.
+#' @param survival_path Path to the bad survival MetaModule in TCGA data.
+#' @param expression_path Path to gene expression data from CCLE.
+#' @param TF_list Path to the transcription factor list.
+#' @param auc_value Path to AUC of drugs in CCLE data.
+#' @param output_path Path to the output file.
+#' @author Ke Tang
+#
+
 suppressPackageStartupMessages({
     library(Seurat)
     library(ggplot2)

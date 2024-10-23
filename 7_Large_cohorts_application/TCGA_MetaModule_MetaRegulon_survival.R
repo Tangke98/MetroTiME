@@ -1,3 +1,13 @@
+#' Clinical survival outcome of MetaModule and MetaRegulon.
+#' @param MM_survival Path to MetaModule survival outcomes from TCGA data.
+#' @param factor_Fibroblasts Path to MetaRegulon identification in fibroblasts.
+#' @param factor_Myeloid Path to MetaRegulon identification in myeloid cells.
+#' @param gsva_path Path to MetaModule scores from TCGA data.
+#' @param tpm_path Path to TPM from TCGA data.
+#' @param clin_path Path to clinical data.
+#' @param output_path Path to the output file.
+#' @author Ke Tang
+#
 suppressPackageStartupMessages({
     library(Seurat)
     library(ggplot2)

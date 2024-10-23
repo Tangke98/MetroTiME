@@ -1,4 +1,4 @@
-### Step 1. Metabolic states in large cohort
+### Step 1. Metabolic subtypes application in large cohort
     ## For clinical survival outcome
     R TCGA_MetaModule_survival.R MetaModule TPM_path clin_path output_path
 
@@ -10,7 +10,7 @@
     R ICB_MetaModule_analysis.R ICB_data MetaModule MetaModule_info output_path
 
 
-### Step 2. Metabolic regulators in large cohort
+### Step 2. Metabolic regulators application in large cohort
     ## For clinical survival outcome
     R TCGA_MetaModule_MetaRegulon_survival.R MM_survival factor_Fibroblasts factor_Myeloid gsva_path tpm_path clin_path output_path
 
