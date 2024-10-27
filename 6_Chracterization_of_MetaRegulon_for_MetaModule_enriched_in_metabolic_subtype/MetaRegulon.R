@@ -1,12 +1,12 @@
-#' Identifies MetaRegulon in myeloid cells.
-#' @param integrated_object_path_myeloid Path to the myeloid cells object.
-#' @param myeloid_DEG Path to the differentially expressed genes of myeloid cells.
-#' @param myeloid_DEM Path to the differentially enriched MetaModule score of myeloid cells.
-#' @param MetaModule Path to the metabolic reactions
+#' Identifies MetaRegulon in cell lineages.
+#' @param integrated_object_path Path to the cell lineages object.
+#' @param DEG Path to the differentially expressed genes of cell lineages.
+#' @param DEM Path to the differentially enriched MetaModule score of cell lineages.
+#' @param MetaModule Path to the metabolic reactions.
 #' @param MetaModule_info Path to the metabolic reaction information.
 #' @param output_path Path to the output file.
 #' @author Ke Tang
-#
+# 
 suppressMessages({
     library(harmony)
     library(Seurat)
@@ -30,20 +30,26 @@ suppressMessages({
 
 args <- commandArgs(trailingOnly = TRUE)
 
-integrated_object_path_myeloid<-args[1]
-myeloid_DEG<-args[2]
-myeloid_DEM<-args[3]
-MetaModule=args[4]
-MetaModule_info=args[5]
-output_path=args[6]
+cell_lineage<-args[1]
+integrated_object_path<-args[2]
+DEG<-args[3]
+DEM<-args[4]
+MetaModule=args[5]
+MetaModule_info=args[6]
+output_path=args[7]
+
+integrated_object_path=paste0(integrated_object_path,cell_lineage,'/')
+output_path=paste0(output_path,cell_lineage,'/')
+DEG=paste0(DEG,cell_lineage,'/')
+DEM=paste0(DEM,cell_lineage,'/')
 
 ## Find the marker genes for each metabolic state of the metacell object
-myeloid<-readRDS(paste0(integrated_object_path_myeloid,'myeloid_integration_annotation_celltype_subset_metatype.rds'))
-myeloid_DEM <- readRDS(myeloid_DEM)
-myeloid_DEG <- readRDS(myeloid_DEG)
+seurat<-readRDS(paste0(integrated_object_path,'_integration_annotation_celltype_metatype.rds'))
+DEM <- readRDS(paste0(DEM,'_metatype_type_DEM_nodup.rds'))
+DEG <- readRDS(paste0(DEG,'_metatype_type_DEG.rds'))
 
-for (i in unique(myeloid_DEG$cluster)){
-  df=myeloid_DEG[myeloid_DEG$cluster==i,]
+for (i in unique(DEG$cluster)){
+  df=DEG[DEG$cluster==i,]
   if (nrow(df)>500){
      genes=df[,'gene'][1:500]
   } else{
@@ -60,16 +66,16 @@ for (i in unique(myeloid_DEG$cluster)){
 MetaModule=readRDS(MetaModule)
 MetaModule_info=readRDS(MetaModule_info)
 
-for (metabolic_state in unique(myeloid_DEM$cluster)){
+for (metabolic_state in unique(DEM$cluster)){
     ## set the parameters
-    object=myeloid
+    object=seurat
     feature='metabolic_type'
     state=metabolic_state
     ## Users can use the differentially enriched MetaModule
     # interested_MM=MetaModule.markers[MetaModule.markers$cluster=='COL11A1+ CAF','gene']
-    interested_MM=myeloid_DEM[myeloid_DEM$cluster==metabolic_state & myeloid_DEM$length>1,'gene']
+    interested_MM=DEM[DEM$cluster==metabolic_state & DEM$length>1,'gene']
     MM_list=MetaModule
-    markers=myeloid_DEG
+    markers=DEG
     lisa_file=paste0(output_path,'lisa/',metabolic_state,':marker.txt.lisa.tsv')
     ligand_target_matrix='./ref/ligand_target_matrix.rds'
     lr_network='./ref/lr_network.rds'

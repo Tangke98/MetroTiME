@@ -1,8 +1,11 @@
-#' Uses ROGUE to evaluate the clustering of myeloid cells based on highly variable genes.
-#' @param integrated_object_path_myeloid Path to the myeloid cells Metacell TPM file.
+#' Uses ROGUE to evaluate the clustering of specific cell lineages based on metabolic genes.
+#' @param cell_lineage The cell lineage to analysis.
+#' @param integrated_object_path Path to the specific cell lineages Metacell TPM file.
+#' @param metabolic_gene Path to the metabolic gene file.
 #' @param output_path Path to the output file.
 #' @author Ke Tang
 #
+
 suppressPackageStartupMessages({
     library(Seurat)
     library(ggplot2)
@@ -21,8 +24,13 @@ suppressPackageStartupMessages({
 
 args <- commandArgs(trailingOnly = TRUE)
 
-integrated_object_path_myeloid<-args[1]
-output_path<-args[2]
+cell_lineage<-args[1]
+integrated_object_path<-args[2]
+metabolic_gene<-args[3]
+output_path<-args[4]
+
+integrated_object_path=paste0(integrated_object_path,cell_lineage,'/',cell_lineage)
+output_path=paste0(output_path,cell_lineage,'/',cell_lineage)
 
 cal_purity=function (seurat_rna, resolution, cluster, feature, metabolic_gene) 
 {
@@ -39,17 +47,26 @@ cal_purity=function (seurat_rna, resolution, cluster, feature, metabolic_gene)
     return(df)
 }
 
-inte_use<-readRDS(paste0(integrated_object_path_myeloid,'myeloid_integration_annotation_celltype_subset.rds'))
-genes=VariableFeatures(inte_use)
-levels_celltype=c('Mono_FCN1','Mono_CD16','Macro_C1QC','Macro_SPP1','Mono_THBS1','Macro_SLPI',
-                  'Macro_IL32','Macro_CDC20','cDC1_CLEC9A','cDC2_CD1C','pDC_LILRA4','Mast_CPA3')
-color_celltype=c('Mono_CD16'='#92C274','Mono_FCN1'='#1C7E76','Mono_THBS1'='#824DAE','Macro_SPP1'='#DB5DB8',
-                 'Macro_SLPI'='#CA131F','Macro_C1QC'='#8ACDD4','Macro_IL1B'='#1965B0','Macro_IL32'='#FBB065',
-                 'Macro_CDC20'='#FED43B','cDC2_CD1C'='#B2B31D','cDC1_CLEC9A'='#D2D77A','pDC_LILRA4'='#BBBBBB',
-                 'Mast_CPA3'='#EDE2F6','Macro_CLEC10A'='#B8A1CD','Macro_CCL18'='#FD8586')
-cal_purity_res=do.call(rbind,lapply(as.list(unique(as.character(inte_use$cell_type))),cal_purity,resolution=0.9,seurat_rna=inte_use,feature='cell_type',metabolic_gene=genes))
+inte_use<-readRDS(paste0(integrated_object_path,'_integration_annotation_celltype_metatype.rds'))
+metabolic=readRDS(metabolic_gene)
+genes=metabolic
+if (cell_lineage=='Fibroblast'){
+    levels_metabolic=c('OXP','IPM','GLYCAN','GLY','FAO','PUFA','LYS','AA')
+    color_metabolic=c('FAO'="#97CADC",'LYS'='#B2B31D','AA'="#92C274",
+                                                'GLY'='#FBB2B4','GLYCAN'='#E47B7E',
+                                                'PUFA'='#FBB065','IPM'='#984EA3',
+                                                'OXP'='#DB5DB8')
+}
+if (cell_lineage=='Myeloid'){
+    levels_metabolic=c("PUFA_LTM",'PUFA_EM','FAS','SLM','ARG','OXP','FAO','GST','PUFA','AA')
+    color_metabolic=c('PUFA_LTM'='#1C7E76','PUFA_EM'='#92C274','OXP'='Thistle','FAO'='#824DAE',
+                                                'SLM'='#8ACDD4','ARG'='#DB5DB8','FAS'='#608FBF','GST'='#CA131F',
+                                                'PUFA'='#FBB065','AA'='#FED43B')
+}
+
+cal_purity_res=do.call(rbind,lapply(as.list(unique(as.character(inte_use$metabolic_type))),cal_purity,resolution=1,seurat_rna=inte_use,feature='metabolic_type',metabolic_gene=genes))
 cal_purity_res$cluster=as.factor(cal_purity_res$cluster)
-cal_purity_res$cluster=factor(cal_purity_res$cluster,levels=levels_celltype)
+cal_purity_res$cluster=factor(cal_purity_res$cluster,levels=levels_metabolic)
 cal_purity_res=cal_purity_res[order(cal_purity_res$cluster),]
 
 width=4
@@ -66,12 +83,12 @@ p=ggplot(cal_purity_res, aes(cluster, rogue)) +
     theme(panel.grid =element_blank()) + 
     geom_point(shape=21,size=3,colour="black",aes(fill=cluster))+
     labs(x='Cluster',y='ROGUE Score')+
-    scale_fill_manual(values=c(color_celltype))+
+    scale_fill_manual(values=c(color_metabolic))+
     theme(axis.text.x = element_text(angle = 90, hjust = 1))+
     theme(axis.title=element_text(size=15),axis.text=element_text(size=15),
           legend.title=element_text(size=15),legend.text=element_text(size=15),
           axis.text.x = element_text(angle = 90, hjust = 1))+NoLegend()
 print(p)
-pdf(paste0(output_path,"celltype_rigue_score.pdf"),width=width,height=height+1)
+pdf(paste0(output_path,"_rigue_score.pdf"),width=width,height=height+1)
     print(p)
 dev.off()

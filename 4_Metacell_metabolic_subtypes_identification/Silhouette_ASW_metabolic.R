@@ -1,10 +1,10 @@
-#' Uses Silhouette analysis to evaluate the clustering of myeloid cells based on metabolic genes.
-#' @param integrated_object_path_myeloid Path to the myeloid cells Metacell TPM file.
+#' Uses Silhouette analysis to evaluate the clustering of specific cell lineages based on metabolic genes.
+#' @param cell_lineage The cell lineage to analysis.
+#' @param integrated_object_path Path to the specific cell lineages Metacell TPM file.
 #' @param metabolic_gene Path to the metabolic gene file.
 #' @param output_path Path to the output file.
-#' @author Ke Tang
+#' @author Ke Tang 
 #
-
 suppressPackageStartupMessages({
     library(Seurat)
     library(ggplot2)
@@ -23,15 +23,19 @@ suppressPackageStartupMessages({
 })
 
 args <- commandArgs(trailingOnly = TRUE)
-integrated_object_path_myeloid<-args[1]
-metabolic_gene<-args[2]
-output_path=args[3]
+cell_lineage<-args[1]
+integrated_object_path<-args[2]
+metabolic_gene<-args[3]
+output_path=args[4]
 
-inte_use<-readRDS(paste0(integrated_object_path_myeloid,'myeloid_integration_annotation_celltype_subset.rds'))
+integrated_object_path=paste0(integrated_object_path,cell_lineage,'/',cell_lineage)
+output_path=paste0(output_path,cell_lineage,'/',cell_lineage)
+
+inte_use<-readRDS(paste0(integrated_object_path,'_integration_annotation_celltype.rds'))
 metabolic=readRDS(metabolic_gene)
 
 print_umap_metabolic=function(inte_use,metabolic,dims,k.param,res,output_path){
-    file_res=paste0(output_path,'META_celltype_PC_',dims,"_Nei_",k.param,"_Res_",res,"_metadata",'.rds')
+    file_res=paste0(output_path,'_META_celltype_PC_',dims,"_Nei_",k.param,"_Res_",res,"_metadata",'.rds')
     if (!file.exists(file_res)){
         VariableFeatures(inte_use)=metabolic
         inte_use <- ScaleData(inte_use)
@@ -40,31 +44,31 @@ print_umap_metabolic=function(inte_use,metabolic,dims,k.param,res,output_path){
         inte_use <- FindNeighbors(inte_use, dims = 1:dims,k.param =k.param)
         inte_use <- FindClusters(inte_use, resolution = res)
         p=DimPlot(inte_use, reduction = "umap",label = TRUE)
-        file_res=paste0(output_path,'META_cluster_PC_',dims,"_Nei_",k.param,"_Res_",res,'.pdf')
+        file_res=paste0(output_path,'_META_cluster_PC_',dims,"_Nei_",k.param,"_Res_",res,'.pdf')
         pdf(file_res,width=7,height=5)
             print(p) 
         dev.off()
 
         p=DimPlot(inte_use, reduction = "umap",group.by='cell_type',label = TRUE)
-        file_res=paste0(output_path,'META_celltype_PC_',dims,"_Nei_",k.param,"_Res_",res,'.pdf')
+        file_res=paste0(output_path,'_META_celltype_PC_',dims,"_Nei_",k.param,"_Res_",res,'.pdf')
         pdf(file_res,width=7,height=5)
             print(p) 
         dev.off()
 
-        file_res=paste0(output_path,'META_celltype_PC_',dims,"_Nei_",k.param,"_Res_",res,"_dist",'.rds')
+        file_res=paste0(output_path,'_META_celltype_PC_',dims,"_Nei_",k.param,"_Res_",res,"_dist",'.rds')
         dist=inte_use@reductions$umap@cell.embeddings
         saveRDS(dist,file_res)
 
-        file_res=paste0(output_path,'META_celltype_PC_',dims,"_Nei_",k.param,"_Res_",res,"_metadata",'.rds')
+        file_res=paste0(output_path,'_META_celltype_PC_',dims,"_Nei_",k.param,"_Res_",res,"_metadata",'.rds')
         metadata=inte_use@meta.data
         saveRDS(metadata,file_res)
     }
 }
-draw_si=function(data,PC,celltype,width,height,color,output_path){
+draw_si=function(data,PC,width,height,color,output_path){
     t1=data[data$PC==PC,]
     t1$Res=as.factor(t1$Res)
     
-    output_name=paste0(celltype,"_",PC,'.pdf')
+    output_name=paste0("_",PC,'.pdf')
     options(repr.plot.width = width, repr.plot.height = height,repr.plot.res = 100)
     
     p=ggplot(t1,aes(x=Nei,y=Si,color =Res)) + 
@@ -81,7 +85,7 @@ draw_si=function(data,PC,celltype,width,height,color,output_path){
         axis.title=element_text(size=14),
         axis.text = element_text(size = 14),
         legend.text=element_text(size=14))+
-        scale_x_continuous(breaks = seq(0, 80, by = 10), 
+        scale_x_continuous(breaks = seq(0, 80, by = 10),  
         limits = c(0, 80))
     print(p)
     pdf(paste0(output_path,output_name),width=width,height=height)
@@ -130,7 +134,7 @@ color=c('0.1'='#8DD3C7','0.2'='#BEBADA','0.3'='#FB8072','0.4'='#80B1D3',
         '0.9'='#BC80BD','1'='#CCEBC5')
 width=4
 height=3
-lapply(as.list(dims_list),draw_si,data=rbind,celltype='myeloid',
+lapply(as.list(dims_list),draw_si,data=rbind,
        width=width,height=height,color=color,output_path=output_path)
 
 rbind_use=rbind[rbind$PC>15 & rbind$Res>0.4 & rbind$Nei==80,]
@@ -147,7 +151,7 @@ p=ggplot(rbind_use, aes(x=PC, y=Si,color=Res) )+
     geom_line(aes(group = Res)) +
     xlab("PC")+
     ylab("Silhouette")+
-    theme_bw() +
+    theme_bw() + 
     scale_color_manual(values=color) + 
     theme(title = element_text(size = 15), text = element_text(size = 15)) + 
             theme_bw() + 
@@ -161,6 +165,6 @@ p=ggplot(rbind_use, aes(x=PC, y=Si,color=Res) )+
             axis.text = element_text(size = 15),
             legend.text=element_text(size=15))
 print(p)
-pdf(paste0(output_path,'meta_final_res.pdf'),width=width,height=height)
+pdf(paste0(output_path,'_meta_final_res.pdf'),width=width,height=height)
     print(p) 
 dev.off() 

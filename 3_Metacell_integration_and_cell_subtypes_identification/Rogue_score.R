@@ -1,5 +1,6 @@
-#' Uses ROGUE to evaluate the clustering of fibroblasts based on highly variable genes.
-#' @param integrated_object_path_fibroblasts Path to the fibroblasts Metacell TPM file.
+#' Uses ROGUE to evaluate the clustering of cell lineage based on highly variable genes.
+#' @param cell_lineage The cell lineage to analysis.
+#' @param integrated_object_path Path to the cell lineage Metacell TPM file.
 #' @param output_path Path to the output file.
 #' @author Ke Tang
 #
@@ -22,8 +23,13 @@ suppressPackageStartupMessages({
 
 args <- commandArgs(trailingOnly = TRUE)
 
-integrated_object_path_fibroblasts<-args[1]
-output_path<-args[2]
+cell_lineage<-args[1]
+integrated_object_path<-args[2]
+output_path<-args[3]
+
+integrated_object_path=paste0(integrated_object_path,cell_lineage,'/',cell_lineage)
+output_path=paste0(output_path,cell_lineage,'/',cell_lineage)
+
 
 cal_purity=function (seurat_rna, resolution, cluster, feature, metabolic_gene) 
 {
@@ -40,13 +46,24 @@ cal_purity=function (seurat_rna, resolution, cluster, feature, metabolic_gene)
     return(df)
 }
 
-inte_use<-readRDS(paste0(integrated_object_path_fibroblasts,'fibroblasts_integration_annotation_celltype.rds'))
+inte_use<-readRDS(paste0(integrated_object_path,'_integration_annotation_celltype.rds'))
 genes=VariableFeatures(inte_use)
-levels_celltype=c('MyoFibro_MYH11','MyoFibro_RGS5','Fibro_CTHRC1',
-                                                 'Fibro_SFRP1','Fibro_IL6',
-                                                 'Fibro_CCL5','Fibro_SAA1','Fibro_CDC20')
-color_celltype=c('Fibro_SFRP1'="#97CADC",'Fibro_CCL5'='#B2B31D','Fibro_IL6'="#FBB065",'Fibro_CTHRC1'='#F87379',
-                 'Fibro_SAA1'='#92C274','MyoFibro_RGS5'='#984EA3','MyoFibro_MYH11'='#DB5DB8')
+if (cell_lineage=='Fibroblast'){
+    levels_celltype=c('MyoFibro_MYH11','MyoFibro_RGS5','Fibro_CTHRC1',
+                                                    'Fibro_SFRP1','Fibro_IL6',
+                                                    'Fibro_CCL5','Fibro_SAA1','Fibro_CDC20')
+    color_celltype=c('Fibro_SFRP1'="#97CADC",'Fibro_CCL5'='#B2B31D','Fibro_IL6'="#FBB065",'Fibro_CTHRC1'='#F87379',
+                    'Fibro_SAA1'='#92C274','MyoFibro_RGS5'='#984EA3','MyoFibro_MYH11'='#DB5DB8')
+}
+if (cell_lineage=='Myeloid'){
+    levels_celltype=c('Mono_FCN1','Mono_CD16','Macro_C1QC','Macro_SPP1','Mono_THBS1','Macro_SLPI',
+                  'Macro_IL32','Macro_CDC20','cDC1_CLEC9A','cDC2_CD1C','pDC_LILRA4','Mast_CPA3')
+    color_celltype=c('Mono_CD16'='#92C274','Mono_FCN1'='#1C7E76','Mono_THBS1'='#824DAE','Macro_SPP1'='#DB5DB8',
+                    'Macro_SLPI'='#CA131F','Macro_C1QC'='#8ACDD4','Macro_IL1B'='#1965B0','Macro_IL32'='#FBB065',
+                    'Macro_CDC20'='#FED43B','cDC2_CD1C'='#B2B31D','cDC1_CLEC9A'='#D2D77A','pDC_LILRA4'='#BBBBBB',
+                    'Mast_CPA3'='#EDE2F6','Macro_CLEC10A'='#B8A1CD','Macro_CCL18'='#FD8586')
+}
+
 cal_purity_res=do.call(rbind,lapply(as.list(unique(as.character(inte_use$cell_type))),cal_purity,resolution=0.9,seurat_rna=inte_use,feature='cell_type',metabolic_gene=genes))
 cal_purity_res$cluster=as.factor(cal_purity_res$cluster)
 cal_purity_res$cluster=factor(cal_purity_res$cluster,levels=levels_celltype)
@@ -72,6 +89,6 @@ p=ggplot(cal_purity_res, aes(cluster, rogue)) +
           legend.title=element_text(size=15),legend.text=element_text(size=15),
           axis.text.x = element_text(angle = 90, hjust = 1))+NoLegend()
 print(p)
-pdf(paste0(output_path,"celltype_rigue_score.pdf"),width=width,height=height+1)
+pdf(paste0(output_path,"_celltype_rigue_score.pdf"),width=width,height=height+1)
     print(p)
 dev.off()

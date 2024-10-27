@@ -1,5 +1,6 @@
-#' Annotates cell subtypes for the Metacells of fibroblasts.
-#' @param integrated_object_path_fibroblasts Path to the fibroblasts object.
+#' Annotates cell subtypes for the Metacells of specific cell lineages.
+#' @param cell_lineage The cell lineage to analysis.
+#' @param integrated_object_path Path to the specific cell lineages object.
 #' @param output_path Path to the output file.
 #' @author Ke Tang
 #
@@ -18,8 +19,12 @@ suppressPackageStartupMessages({
     library(RColorBrewer)
 })
 args <- commandArgs(trailingOnly = TRUE)
-integrated_object_path_fibroblasts<-args[1]
-output_path=args[2]
+
+cell_lineage<-args[1]
+integrated_object_path<-args[2]
+output_path=args[3]
+
+output_path=paste0(output_path,cell_lineage,'/')
 
 Dimplot_umap=function (object, group, color, title, pt.size, width, height, 
     output_path, output_name) 
@@ -197,7 +202,7 @@ DotPlot_change=function (object, features, levels){
             yes = "Identity", no = "Split Identity"))
 }
 
-inte_use<-readRDS(paste0(integrated_object_path_fibroblasts,'fibroblast_integration.rds'))
+inte_use<-readRDS(paste0(integrated_object_path,cell_lineage,'/',cell_lineage,'_integration.rds'))
 inte_use <- FindVariableFeatures(inte_use, selection.method = "vst", nfeatures = 3000)
 inte_use <- ScaleData(inte_use)
 inte_use <- RunPCA(inte_use)
@@ -214,72 +219,155 @@ DimPlot(inte_use, reduction = "umap",cols=c("#4DAF4A",'#984EA3',"#FFFF33",'#A656
                     '#F2F2F2','#B3E2CD','#FDCDAC',"#4DAF4A",'#984EA3',"#FFFF33",'#A65628','#F781BF',
                     '#999999','#66C2A5','#FC8D62','#8DA0CB','#E78AC3','#A6D854'), label = TRUE)
 inte_use.markers <- FindAllMarkers(inte_use, only.pos = TRUE)
-saveRDS(inte_use.markers,paste0(,'fibroblasts_integration_DEG.rds'))
+saveRDS(inte_use.markers,paste0(output_path,cell_lineage,'_integration_DEG.rds'))
 
-## pheatmap to show the markers of clusters
-features = c('GPX1','SAA1','CDC20','VWA1','SLPI', 'IL6','CXCL3','ZG16B', 'CILP','THBS4','CCL5','PTPRC','CCL4', 'HAND2','SFRP1','CFD','MYH11','ACTA2','CCL19',
-            'CJA4','RGS5',  'COL1A1','CTHRC1','FAP','LRRC15','IGF2')
-cluster=c('5', #SAA1
-        '2', #IL6 
-        '6', #CCL5
-        '0', #SFRP1
-        '3', #MYH11
-        '4', #RGS5
-        '1' #CTHRC1
-)
-p1 <- DotPlot(inte_use,assay='RNA',features = features) + 
-    coord_flip() + 
-    theme(panel.grid = element_blank(),
-        axis.text.x=element_text(angle = 45, hjust = 0.5,vjust=0.5))+ 
-        labs(x=NULL,y=NULL) + 
-        guides(size = guide_legend("Percent Expression") )+ #legend
-        scale_color_gradientn(colours = rev(c('#C51B7D','#DE77AE','#F1B6DA','#F7F7F7','#F5F5F5','#C7EAE5','#80CDC1'))) #颜色
-df<- p1$data
-exp_mat<-df %>% 
-    dplyr::select(-pct.exp, -avg.exp) %>%  
-    pivot_wider(names_from = id, values_from = avg.exp.scaled) %>% 
-    as.data.frame() 
-row.names(exp_mat) <- exp_mat$features.plot  
-exp_mat <- exp_mat[,-1] %>% as.matrix()
-## set the color
-brewer_colors <- rev(c(brewer.pal(11, "PiYG")[2:4],'#F7F7F7',brewer.pal(11, "BrBG")[6:8]))
-color_f <- colorRampPalette(brewer_colors)
-colors_100 <- color_f(100)
+if (cell_lineage=='Fibroblast'){
+    ## pheatmap to show the markers of clusters
+    features = c('GPX1','SAA1','CDC20','VWA1','SLPI', 'IL6','CXCL3','ZG16B', 'CILP','THBS4','CCL5','PTPRC','CCL4', 'HAND2','SFRP1','CFD','MYH11','ACTA2','CCL19',
+                'CJA4','RGS5',  'COL1A1','CTHRC1','FAP','LRRC15','IGF2')
+    cluster=c('5', #SAA1
+            '2', #IL6 
+            '6', #CCL5
+            '0', #SFRP1
+            '3', #MYH11
+            '4', #RGS5
+            '1' #CTHRC1
+    )
+    p1 <- DotPlot(inte_use,assay='RNA',features = features) + 
+        coord_flip() + 
+        theme(panel.grid = element_blank(),
+            axis.text.x=element_text(angle = 45, hjust = 0.5,vjust=0.5))+ 
+            labs(x=NULL,y=NULL) + 
+            guides(size = guide_legend("Percent Expression") )+ #legend
+            scale_color_gradientn(colours = rev(c('#C51B7D','#DE77AE','#F1B6DA','#F7F7F7','#F5F5F5','#C7EAE5','#80CDC1'))) #颜色
+    df<- p1$data
+    exp_mat<-df %>% 
+        dplyr::select(-pct.exp, -avg.exp) %>%  
+        pivot_wider(names_from = id, values_from = avg.exp.scaled) %>% 
+        as.data.frame() 
+    row.names(exp_mat) <- exp_mat$features.plot  
+    exp_mat <- exp_mat[,-1] %>% as.matrix()
+    ## set the color
+    brewer_colors <- rev(c(brewer.pal(11, "PiYG")[2:4],'#F7F7F7',brewer.pal(11, "BrBG")[6:8]))
+    color_f <- colorRampPalette(brewer_colors)
+    colors_100 <- color_f(100)
 
-output_name='fibroblasts_celltype_cluster_marker.pdf'
-width=6
-height=3
+    output_name=paste0(cell_lineage,'_celltype_cluster_marker.pdf')
+    width=6
+    height=3
 
-options(repr.plot.width = width, repr.plot.height =height,repr.plot.res = 100)
-p=pheatmap(t(exp_mat)[cluster,],color=colors_100,cluster_rows = FALSE,cluster_cols = FALSE)
-print(p)
-pdf(paste0(output_path,output_name),width=width,height=height)
-    print(p) 
-dev.off()
+    options(repr.plot.width = width, repr.plot.height =height,repr.plot.res = 100)
+    p=pheatmap(t(exp_mat)[cluster,],color=colors_100,cluster_rows = FALSE,cluster_cols = FALSE)
+    print(p)
+    pdf(paste0(output_path,output_name),width=width,height=height)
+        print(p) 
+    dev.off()
 
-## rename the cell subtypes
-Idents(inte_use)='seurat_clusters'
-new.cluster.ids <- c('Fibro_SFRP1',
-                     'Fibro_CTHRC1','Fibro_IL6','MyoFibro_MYH11','MyoFibro_RGS5','Fibro_SAA1', #5
-                     'Fibro_CCL5')
+    ## rename the cell subtypes
+    Idents(inte_use)='seurat_clusters'
+    new.cluster.ids <- c('Fibro_SFRP1',
+                        'Fibro_CTHRC1','Fibro_IL6','MyoFibro_MYH11','MyoFibro_RGS5','Fibro_SAA1', #5
+                        'Fibro_CCL5')
 
-names(new.cluster.ids) <- levels(inte_use)
-inte_use <- RenameIdents(inte_use, new.cluster.ids)
-inte_use$cell_type=Idents(inte_use)
-color_celltype=c('Fibro_SFRP1'="#97CADC",'Fibro_CCL5'='#B2B31D','Fibro_IL6'="#FBB065",'Fibro_CTHRC1'='#F87379',
-                 'Fibro_SAA1'='#92C274','MyoFibro_RGS5'='#DB5DB8','MyoFibro_MYH11'='#984EA3')
-Dimplot_umap(inte_use,'cell_type',color_celltype,'Cell Type',0.1,3,3,output_path,'cell_subtype')
+    names(new.cluster.ids) <- levels(inte_use)
+    inte_use <- RenameIdents(inte_use, new.cluster.ids)
+    inte_use$cell_type=Idents(inte_use)
+    color_celltype=c('Fibro_SFRP1'="#97CADC",'Fibro_CCL5'='#B2B31D','Fibro_IL6'="#FBB065",'Fibro_CTHRC1'='#F87379',
+                    'Fibro_SAA1'='#92C274','MyoFibro_RGS5'='#DB5DB8','MyoFibro_MYH11'='#984EA3')
+    Dimplot_umap(inte_use,'cell_type',color_celltype,'Cell Type',0.1,3,3,output_path,'cell_subtype')
 
-# dotplot to show markers for the cell subtypes
-object = inte_use
-features = c('GPX1','SAA1','CDC20','VWA1','SLPI', 'IL6','CXCL3','ZG16B', 'CILP','THBS4','CCL5','PTPRC','CCL4', 'HAND2','SFRP1','CFD','MYH11',
-            'ACTA2','CCL19','CJA4','RGS5',  'COL1A1','CTHRC1','FAP','LRRC15','IGF2')
+    # dotplot to show markers for the cell subtypes
+    object = inte_use
+    features = c('GPX1','SAA1','CDC20','VWA1','SLPI', 'IL6','CXCL3','ZG16B', 'CILP','THBS4','CCL5','PTPRC','CCL4', 'HAND2','SFRP1','CFD','MYH11',
+                'ACTA2','CCL19','CJA4','RGS5',  'COL1A1','CTHRC1','FAP','LRRC15','IGF2')
 
-levels=c('Fibro_SAA1','Fibro_IL6','Fibro_CCL5','Fibro_SFRP1','MyoFibro_MYH11','MyoFibro_RGS5','Fibro_CTHRC1')
+    levels=c('Fibro_SAA1','Fibro_IL6','Fibro_CCL5','Fibro_SFRP1','MyoFibro_MYH11','MyoFibro_RGS5','Fibro_CTHRC1')
 
-output_name='fibroblasts_celltype_marker.pdf'
-width=9
-height=4
+    output_name=paste0(cell_lineage,'_celltype_marker.pdf')
+    width=9
+    height=4
+
+    
+}
+if (cell_lineage=='Myeloid'){
+    ## pheatmap to show the markers of clusters
+    features = c('PTPRC','CSF1R','CD14','S100A9','FCN1','VCAN','FCGR3A','THBS1','APOE','C1QA','C1QB','C1QC','SLPI','SPP1',
+                'IL1B','IL10','IL32','CDC20','FLT3','CCL22','CLEC9A','LAMP3','CD1C','GZMB','TPSAB1','CTSG')
+    cluster=c(
+        '1','18','19','22','23', #Mono_FCN1
+        '6', #Mono_CD16
+        '4','0','16',#Mono_THBS1
+        '21','2','7','10','3',#Macro_C1QC
+        '11',#Macro_SLPI
+        '9',#Macro_SPP1
+        '12', #Macro_IL32
+        '13',   #Macro_CDC20
+        '17', #cDC1_CLEC9A
+        '14', #cDC1_LAMP3
+        '5','20', #cDC2_CD1C
+        '15', #pDC_LILRA4
+        '8') #Mast_CPA3
+    p1 <- DotPlot(inte_use,assay='RNA',features = features) + 
+        coord_flip() + 
+        theme(panel.grid = element_blank(),
+            axis.text.x=element_text(angle = 45, hjust = 0.5,vjust=0.5))+ 
+            labs(x=NULL,y=NULL) + 
+            guides(size = guide_legend("Percent Expression") )+ #legend
+            scale_color_gradientn(colours = rev(c('#C51B7D','#DE77AE','#F1B6DA','#F7F7F7','#F5F5F5','#C7EAE5','#80CDC1'))) #颜色
+    df<- p1$data
+    exp_mat<-df %>% 
+        dplyr::select(-pct.exp, -avg.exp) %>%  
+        pivot_wider(names_from = id, values_from = avg.exp.scaled) %>% 
+        as.data.frame() 
+    row.names(exp_mat) <- exp_mat$features.plot  
+    exp_mat <- exp_mat[,-1] %>% as.matrix()
+    ## set the color
+    brewer_colors <- rev(c(brewer.pal(11, "PiYG")[2:4],'#F7F7F7',brewer.pal(11, "BrBG")[6:8]))
+    color_f <- colorRampPalette(brewer_colors)
+    colors_100 <- color_f(100)
+
+    output_name=paste0(cell_lineage,'_celltype_cluster_marker.pdf')
+    width=6
+    height=7
+
+    options(repr.plot.width = width, repr.plot.height =height,repr.plot.res = 100)
+    p=pheatmap(t(exp_mat)[cluster,],color=colors_100,cluster_rows = FALSE,cluster_cols = FALSE)
+    print(p)
+    pdf(paste0(output_path,output_name),width=width,height=height)
+        print(p) 
+    dev.off()
+
+    ## rename the cell subtypes
+    Idents(inte_use)='seurat_clusters'
+    new.cluster.ids <- c('Mono_THBS1',
+                        'Mono_FCN1','Macro_C1QC','Macro_C1QC','Mono_THBS1','cDC2_CD1C', #5
+                        'Mono_CD16','Macro_C1QC','Mast_CPA3','Macro_SPP1','Macro_C1QC', #10
+                        'Macro_SLPI','Macro_IL32','Macro_CDC20','cDC1_LAMP3','pDC_LILRA4',#15
+                        'Mono_THBS1','cDC1_CLEC9A','Mono_FCN1','Mono_FCN1','cDC2_CD1C',#20
+                        'Macro_C1QC','Mono_FCN1','Mono_FCN1')
+
+    names(new.cluster.ids) <- levels(inte_use)
+    inte_use <- RenameIdents(inte_use, new.cluster.ids)
+    inte_use$cell_type=Idents(inte_use)
+    color_celltype=c('Mono_CD16'='#92C274','Mono_FCN1'='#1C7E76','Mono_THBS1'='#824DAE','Macro_SPP1'='#DB5DB8',
+                    'Macro_SLPI'='#CA131F','Macro_C1QC'='#8ACDD4','Macro_IL1B'='#1965B0','Macro_IL32'='#FBB065',
+                    'Macro_CDC20'='#FED43B','cDC2_CD1C'='#B2B31D','cDC1_CLEC9A'='#D2D77A','pDC_LILRA4'='#BBBBBB',
+                    'Mast_CPA3'='#EDE2F6','Macro_CLEC10A'='#B8A1CD','Macro_CCL18'='#FD8586',
+                    'cDC1_LAMP3'='#C9D79F')
+    Dimplot_umap(inte_use,'cell_type',color_celltype,'Cell Type',0.1,3,3,output_path,'cell_subtype')
+
+    # dotplot to show markers for the cell subtypes
+    object = inte_use
+    features = c('PTPRC','CSF1R','CD14','S100A9','FCN1','VCAN','FCGR3A','THBS1','APOE','C1QA','C1QB','C1QC','SLPI','SPP1',
+                'IL1B','IL10','IL32','CDC20','FLT3','CCL22','CLEC9A','LAMP3','CD1C','GZMB','TPSAB1','CTSG')
+
+    levels=c('Mono_FCN1','Mono_CD16','Mono_THBS1','Macro_C1QC','Macro_SLPI','Macro_SPP1','Macro_IL32','Macro_CDC20','cDC1_CLEC9A',
+                'cDC1_LAMP3','cDC2_CD1C','pDC_LILRA4','Mast_CPA3')
+
+    output_name=paste0(cell_lineage,'_celltype_marker.pdf')
+    width=9
+    height=4
+}
 
 options(repr.plot.width = 9, repr.plot.height = 4,repr.plot.res = 100)
 p=DotPlot_change(object,features,rev(levels))+
@@ -299,10 +387,10 @@ dev.off()
 
 ## find the cell type specific markers,remove the cell subtypes not interested
 DefaultAssay(inte_use)='integrated'
-saveRDS(inte_use,paste0(output_path,'fibroblasts_integration_annotation_celltype.rds'))
+saveRDS(inte_use,paste0(output_path,cell_lineage,'_integration_annotation_celltype.rds'))
 metadata=inte_use@meta.data
-saveRDS(metadata,paste0(output_path,'fibroblasts_integration_annotation_celltype_metadata.rds'))
+saveRDS(metadata,paste0(output_path,cell_lineage,'_integration_annotation_celltype_metadata.rds'))
 
 Idents(inte_use)='cell_type'
 inte_use.markers <- FindAllMarkers(inte_use, only.pos = TRUE)
-saveRDS(inte_use.markers,paste0(output_path,'fibroblasts_integration_annotation_celltype_DEG.rds'))
+saveRDS(inte_use.markers,paste0(output_path,cell_lineage,'_integration_annotation_celltype_DEG.rds'))

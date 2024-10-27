@@ -1,5 +1,6 @@
-#' Performs MetaRegulon analysis on fibroblasts.
-#' @param integrated_object_path_fibroblasts Path to the fibroblasts object.
+#' Performs MetaRegulon analysis on specific cell lineages.
+#' @param cell_lineage The cell lineage to analysis.
+#' @param integrated_object_path Path to the specific cell lineages object.
 #' @param MetaModule_info Path to the metabolic reaction information.
 #' @param output_path Path to the output file.
 #' @author Ke Tang
@@ -33,21 +34,18 @@ suppressPackageStartupMessages({
 
 args <- commandArgs(trailingOnly = TRUE)
 
+cell_lineage<-args[1]
+integrated_object_path<-args[2]
+MetaModule_info=args[3]
+output_path=args[4]
 
-integrated_object_path_fibroblasts<-args[1]
-MetaModule_info=args[2]
-output_path=args[3]
+integrated_object_path=paste0(integrated_object_path,cell_lineage,'/')
+output_path=paste0(output_path,cell_lineage,'/')
 
-fibroblast<-readRDS(paste0(integrated_object_path_fibroblasts,'fibroblasts_integration_annotation_celltype_metatype.rds'))
-
+seurat<-readRDS(paste0(integrated_object_path,cell_lineage,'_integration_annotation_celltype_metatype.rds'))
 
 fontsize_label=8
 fontsize_title=8
-levels_metabolic=c('OXP','IPM','GLYCAN','GLY','FAO','PUFA','LYS','AA')
-color_metabolic=c('FAO'="#97CADC",'LYS'='#B2B31D','AA'="#92C274",
-                                            'GLY'='#FBB2B4','GLYCAN'='#E47B7E',
-                                            'PUFA'='#FBB065','IPM'='#984EA3',
-                                            'OXP'='#DB5DB8')
 color_cancer_type=c('BCC'="#4DAF4A",'BRCA'='#984EA3','CESC'="#FFFF33",'GIST'="#FFFF33",'CHOL'='#A65628',
                     'CRC'='#F781BF','ESCA'='#999999','HNSC'='#66C2A5','HNSCC'='#66C2A5','NPC'='#66C2A5',
                     'KIRC'='#FC8D62',
@@ -58,27 +56,76 @@ color_cancer_type=c('BCC'="#4DAF4A",'BRCA'='#984EA3','CESC'="#FFFF33",'GIST'="#F
                     'THCA'='#FDB462','LUAD'='#FCCDE5','MCC'='#D9D9D9','UCEC'='#BC80BD','PBMC'='red',
                    'PPB'='red','UVM'='blue')
 
-module=c(
-    'HMR-6918', ## 4 OXP
-    'HMR-6558',
-#     'HMR-6550',##'HMR-6549', ##3 IPM
-    'HMR-7494',##'HMR-7493', ## 1 Chondroitin / heparan sulfate biosynthesis
-    'HMR-4193', ## GLY
-    'FAOXOHC16C16DCc' ,## 0 FAO
-     'HMR-0940',##'HMR-1149' ,##2 PUFA  ##'RE3287R',
-    'HMR-8025', ##'HMR-4241','HMR-6975', ##5 LYS
-    'HMR-3912'
- )
+if (cell_lineage=='Fibroblast'){
+    levels_metabolic=c('OXP','IPM','GLYCAN','GLY','FAO','PUFA','LYS','AA')
+    color_metabolic=c('FAO'="#97CADC",'LYS'='#B2B31D','AA'="#92C274",
+                                                'GLY'='#FBB2B4','GLYCAN'='#E47B7E',
+                                                'PUFA'='#FBB065','IPM'='#984EA3',
+                                                'OXP'='#DB5DB8')
+    module=c(
+        'HMR-6918', ## 4 OXP
+        'HMR-6558',
+    #     'HMR-6550',##'HMR-6549', ##3 IPM
+        'HMR-7494',##'HMR-7493', ## 1 Chondroitin / heparan sulfate biosynthesis
+        'HMR-4193', ## GLY
+        'FAOXOHC16C16DCc' ,## 0 FAO
+        'HMR-0940',##'HMR-1149' ,##2 PUFA  ##'RE3287R',
+        'HMR-8025', ##'HMR-4241','HMR-6975', ##5 LYS
+        'HMR-3912'
+    )
+    gene=c('CEBPD','YBX1',
+    'NOTCH3','TCF4','EPAS1',
+    'LOX','ZNF281',
+    'ATF4','HIF1A',
+    'KLF15','NFE2L2',
+    'NFKB1','REL','SREBF1','MYC',
+    'ZNF83','ZNF207',
+    'TFDP1'
 
+    #SLM2
+    #STM
+    #TRP
+    )
+    module_df=data.frame(module=module,metabolic_type=c(rep('OXP',1),rep('IPM',1),rep('GLYCAN',1),rep('GLY',1),rep('FAO',1),rep('PUFA',1),rep('LYS',1),rep('AA',1)))
 
-module_df=data.frame(module=module,metabolic_type=c(rep('OXP',1),rep('IPM',1),rep('GLYCAN',1),rep('GLY',1),rep('FAO',1),rep('PUFA',1),rep('LYS',1),rep('AA',1)))
+}
+if (cell_lineage=='Myeloid'){
+    levels_metabolic=c("PUFA_LTM",'PUFA_EM','FAS','SLM','ARG','OXP','FAO','GST','PUFA','AA') ## ,'TRP+ cDC2','SL+ pDC','SL+ Mast'
+    color_metabolic=c('PUFA_LTM'='#1C7E76','PUFA_EM'='#92C274','OXP'='Thistle','FAO'='#824DAE',
+                                                'SLM'='#8ACDD4','ARG'='#DB5DB8','FAS'='#608FBF','GST'='#CA131F',
+                                                'PUFA'='#FBB065','AA'='#FED43B')
+    module=c('HMR-1080', ## PUFA_LTM A Leukotriene metabolism 
+        'RE3434R',  ## PUFA_EM B Eicosanoid metabolism
+                    'RE0344M', ## G FAS Fatty acid synthesis
+                    'HMR-0642', ## SLM E Sphingolipid metabolism
+                    'PROAKGOX1r', ## ARG F Arginine and proline metabolism
+        'HMR-6914', ## OXP C Oxidative phosphorylation
+        'RE1514M', ## FAO D Fatty acid oxidation
+        'HMR-3750',## GST H Glycine, serine and threonine metabolism
+        'FAEL183',#PUFA I Arachidonic acid metabolism
+        'HMR-4786')##AA J Nucleotide metabolism
+    gene=c('BACH1','KLF13',
+        'CUX1',
+        'NR1H3','PPARG','NFE2L1',
+        'NFE2L2',
+        'KLF7',
+        'BNIP3',
+        'CEBPD','YBX1',
+        'RELB',
+        'NR2F2','ELF3',
+        'REL','NFKB1','MYC',
+        'TFDP1','KLF5'
+    )
+    module_df=data.frame(module=module,metabolic_type=c(rep('PUFA_LTM',1),rep('PUFA_EM',1),rep('FAS',1),rep('SLM',1),rep('ARG',1),rep('OXP',1),rep('FAO',1),
+                                                      rep('GST',1),rep('PUFA',1),rep('AA',1)))
+}
 
 MM.meta.nozero=readRDS(MetaModule_info)
 
 for (i in 1:nrow(module_df)){
-    file_res=paste0(integrated_object_path_fibroblasts,module_df[i,2],'/MetaRegulon/',module_df[i,2],':',module_df[i,1],'.txt')
+    file_res=paste0(integrated_object_path,module_df[i,2],'/MetaRegulon/',module_df[i,2],':',module_df[i,1],'.txt')
     if (!file.exists(file_res)){
-        base=paste0(integrated_object_path_fibroblasts,module_df[i,2],'/MetaRegulon/')
+        base=paste0(integrated_object_path,module_df[i,2],'/MetaRegulon/')
         names=rownames(MM.meta.nozero[MM.meta.nozero$`GENE ASSOCIATION` == MM.meta.nozero[module_df[i,1],'GENE ASSOCIATION'],])
         
         if (any(file.exists(paste0(base,module_df[i,2],':',names,'.txt')))){
@@ -90,7 +137,7 @@ for (i in 1:nrow(module_df)){
 
 res=list()
 for (i in 1:nrow(module_df)){
-    file_res=paste0(integrated_object_path_fibroblasts,module_df[i,2],'/MetaRegulon/',module_df[i,2],':',module_df[i,1],'.txt')
+    file_res=paste0(integrated_object_path,module_df[i,2],'/MetaRegulon/',module_df[i,2],':',module_df[i,1],'.txt')
     file=read.csv(file_res,header=TRUE,row.names = 1)
     gene=rownames(file[file$rank<51 &file$Ligand_Receptor_interaction==0,])
     df=data.frame(gene=gene,metabolic_subtype=module_df[i,2])
@@ -100,10 +147,10 @@ for (i in 1:nrow(module_df)){
 res_rbind=Reduce(function(x,y){rbind(x,y)},res)
 res_rbind=res_rbind[!duplicated(res_rbind$gene),]
 
-data=GetAssayData(fibroblast)
+data=GetAssayData(seurat)
 data_use=as.data.frame(t(as.matrix(data[res_rbind$gene,])))
-data_use$metabolic_type=fibroblast$metabolic_type
-data_use$Cancer_type=fibroblast$Cancer_type
+data_use$metabolic_type=seurat$metabolic_type
+data_use$Cancer_type=seurat$Cancer_type
 data_use_agg=aggregate(.~metabolic_type+Cancer_type,data_use,mean)
 data_use_agg=data_use_agg[data_use_agg$metabolic_type %in% levels_metabolic,]
 data_use_agg$metabolic_type=factor(data_use_agg$metabolic_type,levels=levels_metabolic)
@@ -158,19 +205,7 @@ top_anno=HeatmapAnnotation(Metabolic_type=data_use_agg$metabolic_type,
 
 draw_data=t(scale(data_use_agg[,3:ncol(data_use_agg)]))
 
-gene=c('CEBPD','YBX1',
-'NOTCH3','TCF4','EPAS1',
-'LOX','ZNF281',
-'ATF4','HIF1A',
-'KLF15','NFE2L2',
-'NFKB1','REL','SREBF1','MYC',
-'ZNF83','ZNF207',
-'TFDP1'
 
-   #SLM2
-   #STM
-   #TRP
- )
 
 match=match(gene, rownames(draw_data_final_order), nomatch = 0)
 match=match[!match==0]
@@ -202,7 +237,7 @@ p=Heatmap(draw_data_final_order,
                                  labels_gp = gpar(fontsize = fontsize_label)))
 print(p)
 
-pdf(paste0(output_path,"fibroblast_regulon_tf_expression_metabolictype.pdf"),width=width,height=height)
+pdf(paste0(output_path,"_regulon_tf_expression_metabolictype.pdf"),width=width,height=height)
     print(p) 
 dev.off()
 

@@ -1,5 +1,6 @@
-#' Uses Silhouette analysis to evaluate the clustering of fibroblasts based on highly variable genes.
-#' @param integrated_object_path_fibroblasts Path to the fibroblasts Metacell TPM file.
+#' Uses Silhouette analysis to evaluate the clustering of cell lineages based on highly variable genes.
+#' @param cell_lineage The cell lineage to analysis.
+#' @param integrated_object_path Path to the cell lineages Metacell TPM file.
 #' @param output_path Path to the output file.
 #' @author Ke Tang
 #
@@ -21,13 +22,14 @@ suppressPackageStartupMessages({
 })
 
 args <- commandArgs(trailingOnly = TRUE)
-integrated_object_path_fibroblasts<-args[1]
-output_path=args[2]
+cell_lineage=args[1]
+integrated_object_path<-args[2]
+output_path=args[3]
 
-inte_use<-readRDS(paste0(integrated_object_path_fibroblasts,'fibroblasts_integration.rds'))
+inte_use<-readRDS(paste0(integrated_object_path,cell_lineage,'/',cell_lineage,'_integration.rds'))
 
-print_umap=function(inte_use,dims,k.param,res,output_path){
-    file_res=paste0(output_path,'VAR_celltype_PC_',dims,"_Nei_",k.param,"_Res_",res,"_metadata",'.rds')
+print_umap=function(inte_use,dims,k.param,res,cell_lineage,output_path){
+    file_res=paste0(output_path,cell_lineage,"/",'VAR_celltype_PC_',dims,"_Nei_",k.param,"_Res_",res,"_metadata",'.rds')
     if (!file.exists(file_res)){
         inte_use <- FindVariableFeatures(inte_use, selection.method = "vst", nfeatures = 3000)
         inte_use <- ScaleData(inte_use)
@@ -36,16 +38,16 @@ print_umap=function(inte_use,dims,k.param,res,output_path){
         inte_use <- FindNeighbors(inte_use, dims = 1:dims,k.param =k.param)
         inte_use <- FindClusters(inte_use, resolution = res)
         p=DimPlot(inte_use, reduction = "umap",label = TRUE)
-        file_res=paste0(output_path,'VAR_cluster_PC_',dims,"_Nei_",k.param,"_Res_",res,'.pdf')
+        file_res=paste0(output_path,cell_lineage,"/",'VAR_cluster_PC_',dims,"_Nei_",k.param,"_Res_",res,'.pdf')
         pdf(file_res,width=7,height=5)
             print(p) 
         dev.off()
 
-        file_res=paste0(output_path,'VAR_celltype_PC_',dims,"_Nei_",k.param,"_Res_",res,"_dist",'.rds')
+        file_res=paste0(output_path,cell_lineage,"/",'VAR_celltype_PC_',dims,"_Nei_",k.param,"_Res_",res,"_dist",'.rds')
         dist=inte_use@reductions$umap@cell.embeddings
         saveRDS(dist,file_res)
 
-        file_res=paste0(output_path,'VAR_celltype_PC_',dims,"_Nei_",k.param,"_Res_",res,"_metadata",'.rds')
+        file_res=paste0(output_path,cell_lineage,"/",'VAR_celltype_PC_',dims,"_Nei_",k.param,"_Res_",res,"_metadata",'.rds')
         metadata=inte_use@meta.data
         saveRDS(metadata,file_res)
     }
@@ -59,7 +61,7 @@ res_list <- c(0.1, 0.2, 0.3,0.4,0.5,0.6,0.7,0.8,0.9,1.0)
 for (dims in dims_list) {
   for (k.param in k_param_list) {
     for (res in res_list) {
-      print_umap(inte_use, dims, k.param, res,output_path)
+      print_umap(inte_use, dims, k.param, res,cell_lineage,output_path)
     }
   }
 }
@@ -94,7 +96,7 @@ color=c('0.1'='#8DD3C7','0.2'='#BEBADA','0.3'='#FB8072','0.4'='#80B1D3',
 ## figure paramaters
 width=4
 height=3
-draw_si=function(data,PC,celltype,width,height,color,output_path){
+draw_si=function(data,PC,celltype,width,height,color,cell_lineage,output_path){
     t1=data[data$PC==PC,]
     t1$Res=as.factor(t1$Res)
     
@@ -118,12 +120,12 @@ draw_si=function(data,PC,celltype,width,height,color,output_path){
         scale_x_continuous(breaks = seq(0, 80, by = 10), 
         limits = c(0, 80))
     print(p)
-    pdf(paste0(output_path,output_name),width=width,height=height)
+    pdf(paste0(output_path,cell_lineage,"/",output_name),width=width,height=height)
         print(p) 
     dev.off() 
 }
 ## draw the figure
-lapply(as.list(dims_list),draw_si,data=rbind,celltype='fibroblasts',width=width,height=height,color=color,output_path=output_path)
+lapply(as.list(dims_list),draw_si,data=rbind,celltype=cell_lineage,width=width,height=height,color=color,cell_lineage=cell_lineageoutput_path=output_path)
 
 ## choose the parameters which could produce the higher Silhouette score
 rbind_use=rbind[rbind$PC>15 & rbind$Res>0.4 & rbind$Nei==70,]
@@ -154,6 +156,6 @@ p=ggplot(rbind_use, aes(x=PC, y=Si,color=Res) )+
             axis.text = element_text(size = 15),
             legend.text=element_text(size=15))
 print(p)
-pdf(paste0(output_path,'var_final_res.pdf'),width=width,height=height)
+pdf(paste0(output_path,cell_lineage,"/",'var_final_res.pdf'),width=width,height=height)
     print(p) 
 dev.off() 
