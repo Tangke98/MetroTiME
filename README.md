@@ -1,7 +1,7 @@
 # MetroTIME: Pan-cancer single-cell metabolism and regulatory analyses identifies microenvironment metabolic subtypes associated with tumor immunity
 
 Metabolic reprogramming is a hallmark of cancer, yet the mechanisms underlying metabolic state heterogeneities and their regulation within the tumor microenvironment are still poorly understood. MetroSCREEN synergistically integrates intrinsic gene regulation with extrinsic cellular interactions to accurately predict potential regulators, demonstrating high consistency with results from single-cell perturbations. We developed a framework MetroTIME, which applied MetroSCREEN to a comprehensive pan-cancer single-cell atlas encompassing over 700,000 fibroblasts and myeloid cells across 36 cancer types. This framework consists of five main modules: tumor-related single-cell datasets collection, integrated data analysis using MetroSCREEN, pan-cancer MetaModule analysis, pan-cancer MetaRegulon analysis, and large-scale cohort validation.
-<img src="https://github.com/yahan9416/TabulaTiME/blob/main/Image/TabulaTIME_workflow.png" alt="Image Description" width="100%" />
+<img src="https://github.com/Tangke98/MetroTiME/blob/main/Image/MetroTIME_pipline.png" alt="Image Description" width="100%" />
 The MetroTIME can be explored and  visualization at [MetroTIME Website](http://wanglab-compbio.cn/MetroTIME/).
 
 ## 1. scRNA-seq data collection and preprocessing
@@ -26,7 +26,7 @@ To facilitate the characterization of metabolic subtypes, we examined the corres
 To explore the metabolic regulators of metabolic states, we applied MetroSCREEN. The regulators enriched in each metabolic subtype were identified and the metabolic regulatory networks for these states was constructed.
 
 ## 7. Large cohorts application
-To explore the relationship between metabolic states, their regulators, and both clinical survival outcomes and treatment responses, MetroSCREEN was utilized to large-scale tumor profiles from TCGA, ICB-treated patients, and the Cancer Cell Line Encyclopedia (CCLE).
+To explore the relationship between metabolic states, their regulators, and both clinical survival outcomes and treatment responses, MetroSCREEN was utilized to large-scale tumor profiles from TCGA, ICB-treated patients, and the Cancer Cell Line Encyclopedia (CCLE) datatsets.
 
 ## Environment 
     Ubuntu 9.3.0
